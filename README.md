@@ -496,6 +496,20 @@ Results written to ./results/
 Server stopped gracefully
 ```
 
+## CI/CD (GitHub Actions)
+
+The project includes a GitHub Actions workflow (`.github/workflows/run-auction.yml`) that runs automatically on every push to `main`:
+
+1. **Builds** the project
+2. **Builds with race detector** to verify no data races
+3. **Runs the simulator** with two resource configs (CPU=2/RAM=256MB and CPU=4/RAM=512MB)
+4. **Verifies** 41 output files are created
+5. **Writes server logs** to GitHub Summary (visible in the Actions tab)
+6. **Uploads auction results** as downloadable artifacts (retained for 30 days)
+7. **Cleans up** build artifacts
+
+Can also be triggered manually from the Actions tab → "Run workflow" button.
+
 ## Verification
 
 ```bash
