@@ -4,7 +4,7 @@ A concurrent auction simulator built in Go that runs multiple auctions simultane
 
 ## Live CI/CD Demo
 
-> **[View the CI/CD pipeline run on GitHub Actions](https://github.com/Yash-0702/auction-simulator/actions/runs/23689245550)** — includes build logs, server output, race detection results, and downloadable auction artifacts across multiple resource configurations.
+> **[View the CI/CD pipeline run on GitHub Actions](https://github.com/Yash-0702/auction-simulator/actions/runs/23695227437)** — includes build logs, server output, race detection results, and downloadable auction artifacts across multiple resource configurations.
 
 ## Features
 
