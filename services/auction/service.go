@@ -2,7 +2,6 @@ package auction
 
 import (
 	"context"
-	"fmt"
 	"math/rand"
 	"sync"
 	"time"
@@ -23,7 +22,7 @@ func NewService(config providers.ConfigProvider) *Service {
 
 // EvaluateAndBid computes a bid for the given item. Returns nil if the bidder
 // chooses not to bid (simulated by a random skip chance).
-func (s *Service) EvaluateAndBid(b models.Bidder, item models.Item, rng *rand.Rand) *models.Bid {
+func (s *Service) evaluateAndBid(b models.Bidder, item models.Item, rng *rand.Rand) *models.Bid {
 	// 20% chance the bidder doesn't respond
 	if rng.Float64() < 0.20 {
 		return nil
@@ -75,7 +74,7 @@ func (s *Service) RunAuction(ctx context.Context, auctionID int, item models.Ite
 			defer wg.Done()
 			// Each goroutine gets its own RNG to avoid lock contention
 			rng := rand.New(rand.NewSource(time.Now().UnixNano() + int64(b.ID*auctionID)))
-			bid := s.EvaluateAndBid(b, item, rng)
+			bid := s.evaluateAndBid(b, item, rng)
 			if bid != nil {
 				select {
 				case bidsChan <- *bid: // send bid to channel
@@ -120,7 +119,7 @@ Loop:
 
 	duration := time.Since(start)
 
-	result := models.AuctionResult{
+	return models.AuctionResult{
 		AuctionID:    auctionID,
 		Item:         item,
 		TotalBidders: len(bidders),
@@ -131,13 +130,4 @@ Loop:
 		DurationStr:  duration.String(),
 		TimedOut:     timedOut,
 	}
-
-	if winner != nil {
-		fmt.Printf("Auction #%d: Winner is Bidder #%d with bid $%.2f (%d bids received, %s)\n",
-			auctionID, winner.BidderID, winner.Amount, len(bids), duration)
-	} else {
-		fmt.Printf("Auction #%d: No bids received (%s)\n", auctionID, duration)
-	}
-
-	return result
 }
