@@ -323,8 +323,9 @@ main.go                          → Entry point, signal handling, graceful shut
 │
 ├── services/
 │   └── auction/
-│       ├── handler.go           → Orchestrates auction execution (launches goroutines, writes output)
-│       └── service.go           → Business logic (bid evaluation, auction running, winner selection)
+│       ├── handler.go           → Orchestrates auction execution (launches goroutines, prints results)
+│       ├── service.go           → Business logic (bid evaluation, auction running, winner selection)
+│       └── writer.go            → Writes per-auction JSON files and summary to disk
 │
 ├── models/
 │   ├── item.go                  → Item struct + NewItem()
@@ -345,7 +346,7 @@ main.go                          → Entry point, signal handling, graceful shut
 | **Entry point** | `main.go` | Starts server, sets up signal handling, triggers shutdown |
 | **Server** | `server/server.go` | Creates and wires all providers and handlers (dependency injection container) |
 | **Providers** | `providers/` | Interfaces for cross-cutting concerns. `ConfigProvider` defines what config methods exist; `configprovider/` implements them by reading `.env` + env vars |
-| **Services** | `services/auction/` | `handler.go` orchestrates (creates bidders, launches auctions, writes output). `service.go` contains business logic (bid calculation, auction running, winner selection) |
+| **Services** | `services/auction/` | `handler.go` orchestrates (creates bidders, launches auctions, prints results). `service.go` contains pure business logic (bid calculation, auction running, winner selection). `writer.go` handles result file I/O |
 | **Models** | `models/` | Data structures only. Each model in its own file. Also contains factory functions (`NewItem`, `NewBidders`) |
 | **Utils** | `utils/` | Shared helpers like `WriteJSON` used across the project |
 
@@ -369,8 +370,9 @@ main.go
         │           ├── collect bids via channel until timeout
         │           └── pick highest bid = winner
         ├── timing + memory reporting
-        ├── clear previous results
-        └── utils.WriteJSON()                     → write auction files + summary
+        └── auction.WriteResults()                → standalone function in writer.go:
+              ├── clear previous results
+              └── utils.WriteJSON()               → write auction files + summary
 
   └── srv.Stop()                                  → graceful cleanup
 ```
