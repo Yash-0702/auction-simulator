@@ -2,6 +2,10 @@
 
 A concurrent auction simulator built in Go that runs multiple auctions simultaneously with simulated bidders. Follows a layered, service-oriented architecture with dependency injection.
 
+## Live CI/CD Demo
+
+> **[View the CI/CD pipeline run on GitHub Actions](https://github.com/Yash-0702/auction-simulator/actions/runs/23689245550)** — includes build logs, server output, race detection results, and downloadable auction artifacts across multiple resource configurations.
+
 ## Features
 
 - **100 bidders** with randomized attribute preferences
@@ -16,9 +20,29 @@ A concurrent auction simulator built in Go that runs multiple auctions simultane
 
 ## Prerequisites
 
-- Go 1.26.1 or higher
+- Go 1.26.1 or higher (for local builds)
+- Docker (for containerized builds)
 
 ## Build & Run
+
+### Using Docker
+
+```bash
+docker build -t auction-simulator .
+docker run --rm --env-file .env auction-simulator
+```
+
+Override settings inline:
+```bash
+docker run --rm -e NUM_AUCTIONS=10 -e NUM_BIDDERS=50 auction-simulator
+```
+
+Persist results to the host:
+```bash
+docker run --rm --env-file .env -v ./results:/app/results auction-simulator
+```
+
+### Using Go directly
 
 ```bash
 go build -o auction-simulator .
@@ -513,7 +537,11 @@ Can also be triggered manually from the Actions tab → "Run workflow" button.
 ## Verification
 
 ```bash
-# Build and run
+# Build and run with Docker
+docker build -t auction-simulator .
+docker run --rm -v ./results:/app/results auction-simulator
+
+# Or build and run with Go
 go build -o auction-simulator . && ./auction-simulator
 
 # Check output files were created (should show 41: 40 auctions + 1 summary)
