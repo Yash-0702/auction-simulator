@@ -16,7 +16,7 @@ A concurrent auction simulator built in Go that runs multiple auctions simultane
 
 ## Prerequisites
 
-- Go 1.21 or higher
+- Go 1.26.1 or higher
 
 ## Build & Run
 

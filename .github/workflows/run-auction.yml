@@ -1,0 +1,88 @@
+name: Run Auction Simulator
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch: # allows manual trigger from GitHub UI
+
+jobs:
+  run-auction:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        max_cpus: [2, 4]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.26.1'
+
+      - name: Build
+        run: go build -o auction-simulator .
+
+      - name: Build with race detector
+        run: go build -race -o auction-simulator-race .
+
+      - name: Run auction simulator (MAX_CPUS=${{ matrix.max_cpus }})
+        run: |
+          ./auction-simulator 2>&1 | tee output.log
+        env:
+          NUM_BIDDERS: 100
+          NUM_AUCTIONS: 40
+          AUCTION_TIMEOUT: 2s
+          MAX_CPUS: ${{ matrix.max_cpus }}
+          MAX_MEMORY_MB: 512
+          RESULTS_DIR: results
+
+      - name: Run with race detector
+        run: |
+          ./auction-simulator-race 2>&1 | tee race-output.log
+        env:
+          NUM_BIDDERS: 100
+          NUM_AUCTIONS: 40
+          AUCTION_TIMEOUT: 2s
+          MAX_CPUS: ${{ matrix.max_cpus }}
+          MAX_MEMORY_MB: 512
+          RESULTS_DIR: results-race
+
+      - name: Verify output files
+        run: |
+          echo "Auction result files:"
+          ls -la results/
+          echo ""
+          echo "Total files: $(ls results/ | wc -l) (expected: 41 = 40 auctions + 1 summary)"
+          echo ""
+          echo "Sample auction result (auction_01.json):"
+          cat results/auction_01.json
+          echo ""
+          echo "Summary config:"
+          head -10 results/summary.json
+
+      - name: Write job summary
+        run: |
+          echo "## Auction Simulator — Server Logs (MAX_CPUS=${{ matrix.max_cpus }})" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat output.log >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload auction results
+        uses: actions/upload-artifact@v4
+        with:
+          name: auction-results-cpu-${{ matrix.max_cpus }}
+          path: results/
+          retention-days: 30
+
+      - name: Cleanup build artifacts
+        if: always()
+        run: |
+          rm -f auction-simulator auction-simulator-race
+          rm -f output.log race-output.log
+          rm -rf results/ results-race/
