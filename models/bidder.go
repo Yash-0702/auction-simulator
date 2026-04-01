@@ -20,7 +20,7 @@ func NewBidders(n int, rng *rand.Rand) []Bidder {
 		bidders[i] = Bidder{
 			ID:      i + 1,
 			Weights: weights,
-			Budget:  500 + rng.Float64()*1500,
+			Budget:  80000 + rng.Float64()*20000,
 		}
 	}
 	return bidders

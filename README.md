@@ -101,7 +101,7 @@ When the program starts, `main.go` calls `server.SrvInit()` which:
 100 bidders are created, each with:
 
 - **20 random preference weights** (0.0 to 1.0) — represents how much each bidder values each attribute. For example, Bidder #1 might have weight 0.95 for attribute "quality" but 0.10 for "color"
-- **A random budget** ($500 to $2000) — the maximum amount they're willing to spend
+- **A random budget** ($80,000 to $100,000) — the maximum amount they're willing to spend
 
 Every bidder is unique — different preferences and different budgets.
 
@@ -154,15 +154,17 @@ Each bidder decides whether and how much to bid:
 2. **Calculate bid amount using weighted score:**
    ```
    score = weight[0] × attribute[0] + weight[1] × attribute[1] + ... + weight[19] × attribute[19]
-   bidAmount = (score / 20) × budget
+   bidAmount = (score / 2000) × budget × willingness × jitter
    ```
-   A bidder who values what the item offers (high weights matching high attributes) will bid more. The score is normalized by dividing by 20 (number of attributes), then scaled by the bidder's budget.
+   A bidder who values what the item offers (high weights matching high attributes) will bid more. The score is normalized by dividing by 2000 (max possible score: 20 attributes × 100 max value), then scaled by the bidder's budget. The bid is capped to never exceed the bidder's budget.
 
-3. **Add ±10% randomness (jitter)** — multiplies the bid by a random factor between 0.9 and 1.1 to simulate real-world imprecision.
+3. **Willingness factor** — multiplies the bid by a random factor between 0.2 and 1.0. This simulates real-world behavior where bidders don't always go all-in, preventing the same high-preference bidder from winning every auction.
 
-4. **Simulate thinking time** — `time.Sleep(0 to 99ms)`. Each bidder takes a different amount of time to respond. This is important because slow bidders might miss the auction timeout.
+4. **Add ±10% randomness (jitter)** — multiplies the bid by a random factor between 0.9 and 1.1 to simulate real-world imprecision.
 
-5. **Submit bid** — sends the bid (bidder ID, amount, timestamp) through a Go channel to the auction collector.
+5. **Simulate thinking time** — `time.Sleep(0 to 99ms)`. Each bidder takes a different amount of time to respond. This is important because slow bidders might miss the auction timeout.
+
+6. **Submit bid** — sends the bid (bidder ID, amount, timestamp) through a Go channel to the auction collector.
 
 **5c. Collect bids until timeout**
 

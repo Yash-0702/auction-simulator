@@ -35,12 +35,22 @@ func (s *Service) evaluateAndBid(b models.Bidder, item models.Item, rng *rand.Ra
 		score += b.Weights[i] * attrValues[i]
 	}
 
-	// Scale score to a bid amount (normalize: max possible score is 20)
-	bidAmount := (score / 20.0) * b.Budget
+	// Scale score to a bid amount (normalize: max possible score is 2000, i.e. 20 attributes × 100 max value)
+	bidAmount := (score / 2000.0) * b.Budget
+
+	// Willingness factor: bidder randomly decides to spend 20%-100% of their calculated bid
+	// This prevents the same high-preference bidder from winning every auction
+	willingness := 0.2 + rng.Float64()*0.8
+	bidAmount *= willingness
 
 	// Add some randomness (+/- 10%)
 	jitter := 0.9 + rng.Float64()*0.2
 	bidAmount *= jitter
+
+	// Cap bid to never exceed budget
+	if bidAmount > b.Budget {
+		bidAmount = b.Budget
+	}
 
 	if bidAmount <= 0 {
 		return nil
