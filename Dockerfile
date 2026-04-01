@@ -13,7 +13,10 @@ FROM alpine:3.21
 WORKDIR /app
 
 COPY --from=builder /app/auction-simulator .
-COPY example.env .
+# Rename example.env to .env so godotenv.Load() picks it up at runtime
+# For local testing, replace 'example.env' with your own .env file if needed:
+#   COPY .env .env
+COPY example.env .env
 
 RUN mkdir -p results
 
